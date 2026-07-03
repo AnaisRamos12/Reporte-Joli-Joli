@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Reportes Asesoras</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 24px; min-height: 100vh;
+    background: #0b1120; font-family: system-ui, -apple-system, sans-serif;
+    color: #e5e7eb;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; color: #f5f5f5; }
+  .subtitle {
+    color: #f5a623; font-size: 12px; font-weight: 600;
+    letter-spacing: .04em; text-transform: uppercase; margin-bottom: 24px;
+  }
+
+  .filtro-card {
+    background: #111827; border: 1px solid #1f2937; border-radius: 12px;
+    padding: 20px; margin-bottom: 24px;
+  }
+  .filtro-label {
+    color: #f5a623; font-size: 12px; font-weight: 600;
+    letter-spacing: .04em; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .filtro-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+  .campo label { display: block; color: #9ca3af; font-size: 11px; text-transform: uppercase; margin-bottom: 6px; }
+  .campo input[type="date"] {
+    background: #0b1120; border: 1px solid #1f2937; color: #e5e7eb;
+    border-radius: 8px; padding: 8px 10px; font-size: 13px;
+  }
+  button.btn-primary {
+    background: #f5a623; color: #1c1408; border: none; border-radius: 8px;
+    padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  button.btn-primary:hover { background: #ffb84d; }
+  .quick-filtros { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .quick-filtros button {
+    background: transparent; border: 1px solid #1f2937; color: #9ca3af;
+    border-radius: 999px; padding: 6px 14px; font-size: 12px; cursor: pointer;
+  }
+  .quick-filtros button:hover { border-color: #f5a623; color: #f5a623; }
+
+  .url-row { display: flex; gap: 10px; align-items: center; }
+  .url-row input[type="text"] {
+    flex: 1; background: #0b1120; border: 1px solid #1f2937; color: #e5e7eb;
+    border-radius: 8px; padding: 8px 12px; font-size: 12px;
+  }
+  .url-row button {
+    background: transparent; border: 1px solid #1f2937; color: #e5e7eb;
+    border-radius: 8px; padding: 8px 16px; font-size: 12px; cursor: pointer;
+  }
+
+  #estado { font-size: 13px; margin: 10px 2px 0; color: #f5a623; }
+  #estado.error { color: #f87171; }
+  #estado.ok { color: #4ade80; }
+
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 24px 0;
+  }
+  .stat-card {
+    background: #111827; border-top: 3px solid #f5a623; border-radius: 10px; padding: 16px;
+  }
+  .stat-card.caja { border-top-color: #4ade80; }
+  .stat-card.horas { border-top-color: #60a5fa; }
+  .stat-card.lives { border-top-color: #a78bfa; }
+  .stat-label { color: #9ca3af; font-size: 11px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { color: #e5e7eb; font-size: 22px; font-weight: 600; }
+  .stat-hint { color: #6b7280; font-size: 11px; margin-top: 4px; }
+
+  .seccion-label {
+    color: #f5a623; font-size: 12px; font-weight: 600;
+    letter-spacing: .04em; text-transform: uppercase; margin: 24px 0 10px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 16px;
+  }
+  table.datos { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.datos th { color: #9ca3af; text-align: left; font-weight: 500; padding: 6px 8px; }
+  table.datos td { color: #e5e7eb; padding: 8px; border-top: 1px solid #1f2937; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; background: #1f2937; color: #9ca3af; }
+  .pill.dia { background: #1e293b; color: #93c5fd; }
+  .pill.noche { background: #312e81; color: #c4b5fd; }
+
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .bar-label { color: #9ca3af; font-size: 11px; width: 60px; flex-shrink: 0; }
+  .bar-track { flex: 1; background: #1f2937; border-radius: 4px; height: 8px; overflow: hidden; }
+  .bar-fill { background: #f5a623; height: 100%; }
+  .bar-fill.canal { background: #60a5fa; }
+  .bar-num { color: #e5e7eb; font-size: 12px; width: 40px; text-align: right; }
+
+  .stat-inline { margin-bottom: 12px; }
+  .stat-inline .stat-value { font-size: 24px; color: #4ade80; }
+
+  .empty { color: #6b7280; font-size: 13px; padding: 8px 4px; }
+  .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 32px; }
+
+  details.avanzado {
+    margin-top: 28px; border: 1px solid #1f2937; border-radius: 12px;
+    background: #0d1424; overflow: hidden;
+  }
+  details.avanzado summary {
+    cursor: pointer; padding: 16px 20px; font-size: 13px; font-weight: 600;
+    color: #f5a623; list-style: none; display: flex; align-items: center;
+    justify-content: space-between; user-select: none;
+  }
+  details.avanzado summary::-webkit-details-marker { display: none; }
+  details.avanzado summary::after {
+    content: '▾'; transition: transform .15s ease; color: #9ca3af;
+  }
+  details.avanzado[open] summary::after { transform: rotate(180deg); }
+  details.avanzado summary:hover { background: #111827; }
+  .avanzado-body { padding: 4px 20px 20px; }
+
+  @media (max-width: 720px) {
+    .stats-grid, .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Reportes Asesoras</h1>
+  <div class="subtitle">Resumen de ventas en vivo por rango de fechas</div>
+
+  <div class="filtro-card">
+    <div class="filtro-label">Rango de fechas</div>
+    <div class="filtro-row">
+      <div class="campo">
+        <label>Desde</label>
+        <input type="date" id="fechaDesde" />
+      </div>
+      <div class="campo">
+        <label>Hasta</label>
+        <input type="date" id="fechaHasta" />
+      </div>
+      <button class="btn-primary" onclick="generarResumen()">Generar resumen</button>
+    </div>
+    <div class="quick-filtros">
+      <button onclick="filtroRapido('hoy')">Hoy</button>
+      <button onclick="filtroRapido('7dias')">Últimos 7 días</button>
+      <button onclick="filtroRapido('30dias')">Últimos 30 días</button>
+      <button onclick="filtroRapido('mes')">Este mes</button>
+    </div>
+    <div class="url-row">
+      <input type="text" id="webAppUrl" placeholder="Pega aquí la URL de tu Web App (.../exec)" />
+      <button onclick="guardarUrl()">Guardar</button>
+    </div>
+    <div id="estado"></div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total pares</div>
+      <div class="stat-value" id="statPares">-</div>
+    </div>
+    <div class="stat-card caja">
+      <div class="stat-label">Caja acumulada</div>
+      <div class="stat-value" id="statCaja">-</div>
+    </div>
+    <div class="stat-card horas">
+      <div class="stat-label">Horas live</div>
+      <div class="stat-value" id="statHoras">-</div>
+    </div>
+    <div class="stat-card lives">
+      <div class="stat-label">Lives realizados</div>
+      <div class="stat-value" id="statLives">-</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="seccion-label">Por turno</div>
+      <div class="card"><table class="datos" id="tablaPorTurno"></table></div>
+    </div>
+    <div>
+      <div class="seccion-label">Por asesora (venta)</div>
+      <div class="card"><table class="datos" id="tablaPorAsesora"></table></div>
+    </div>
+  </div>
+
+  <div class="seccion-label">Detalle por día</div>
+  <div class="card"><table class="datos" id="tablaPorDia"></table></div>
+
+  <!-- ===== Secciones nuevas (colapsables) ===== -->
+
+  <details class="avanzado" id="bloqueAvanzado">
+    <summary>Ver análisis avanzado</summary>
+    <div class="avanzado-body">
+
+      <div class="grid-2">
+        <div>
+          <div class="seccion-label">Por asesora live</div>
+          <div class="card"><table class="datos" id="tablaAsesoraLive"></table></div>
+        </div>
+        <div>
+          <div class="seccion-label">Promociones más efectivas</div>
+          <div class="card"><table class="datos" id="tablaPromociones"></table></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="seccion-label">Picos de venta por hora</div>
+          <div class="card" id="picosVenta"></div>
+        </div>
+        <div>
+          <div class="seccion-label">Pares por canal</div>
+          <div class="card" id="paresPorCanal"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="seccion-label">Por día de semana</div>
+          <div class="card"><table class="datos" id="tablaDiaSemana"></table></div>
+        </div>
+        <div>
+          <div class="seccion-label">Terminó de pagar</div>
+          <div class="card">
+            <div class="stat-inline">
+              <div class="stat-label">Total en el rango</div>
+              <div class="stat-value" id="statTerminoPagar">-</div>
+            </div>
+            <table class="datos" id="tablaCobros"></table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </details>
+
+  <div class="footer">JOLI JOLI · Reportes Asesoras · Datos leídos en vivo desde Google Sheets</div>
+</div>
+
+<script>
+  var webAppUrl = '';
+
+  function guardarUrl() {
+    webAppUrl = document.getElementById('webAppUrl').value.trim();
+    mostrarEstado(webAppUrl ? 'URL guardada para esta sesión.' : 'Ingresa una URL válida.', webAppUrl ? 'ok' : 'error');
+  }
+
+  function mostrarEstado(msg, tipo) {
+    var el = document.getElementById('estado');
+    el.textContent = msg;
+    el.className = tipo || '';
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function toISODate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+
+  function filtroRapido(tipo) {
+    var hoy = new Date();
+    var desde = new Date(hoy);
+    var hasta = new Date(hoy);
+
+    if (tipo === 'hoy') {
+      // desde = hasta = hoy
+    } else if (tipo === '7dias') {
+      desde.setDate(desde.getDate() - 6);
+    } else if (tipo === '30dias') {
+      desde.setDate(desde.getDate() - 29);
+    } else if (tipo === 'mes') {
+      desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    }
+
+    document.getElementById('fechaDesde').value = toISODate(desde);
+    document.getElementById('fechaHasta').value = toISODate(hasta);
+    generarResumen();
+  }
+
+  function generarResumen() {
+    if (!webAppUrl) {
+      mostrarEstado('Primero pega y guarda la URL de tu Web App.', 'error');
+      return;
+    }
+    var desde = document.getElementById('fechaDesde').value;
+    var hasta = document.getElementById('fechaHasta').value;
+    if (!desde || !hasta) {
+      mostrarEstado('Selecciona ambas fechas.', 'error');
+      return;
+    }
+
+    mostrarEstado('Cargando...', '');
+
+    var url = webAppUrl + (webAppUrl.indexOf('?') >= 0 ? '&' : '?') +
+      'start=' + encodeURIComponent(desde) + '&end=' + encodeURIComponent(hasta);
+
+    fetch(url)
+      .then(function (res) { return res.text(); })
+      .then(function (text) {
+        var data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error('Unexpected token, la respuesta no es JSON válido');
+        }
+        if (data.error) throw new Error(data.message || 'Error desconocido del servidor');
+        pintarTodo(data);
+        mostrarEstado('Actualizado.', 'ok');
+      })
+      .catch(function (err) {
+        mostrarEstado('No se pudo conectar con la API. Revisa la URL. (' + err.message + ')', 'error');
+      });
+  }
+
+  function pintarTodo(data) {
+    pintarStats(data);
+    pintarPorTurno(data);
+    pintarPorAsesora(data);
+    pintarPorDia(data);
+    pintarAsesoraLive(data);
+    pintarPromociones(data);
+    pintarPicosVenta(data);
+    pintarPorCanal(data);
+    pintarDiaSemana(data);
+    pintarCobros(data);
+  }
+
+  function horasATexto(h) {
+    if (h === undefined || h === null) return '-';
+    var horas = Math.floor(h);
+    var min = Math.round((h - horas) * 60);
+    return horas + 'h ' + pad(min) + 'm';
+  }
+
+  function soles(n) {
+    return 'S/ ' + Number(n || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function escapeHtml(s) {
+    if (s === undefined || s === null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function pintarStats(data) {
+    var t = data.totals || {};
+    document.getElementById('statPares').textContent = t.pares || 0;
+    document.getElementById('statCaja').textContent = soles(t.caja);
+    document.getElementById('statHoras').textContent = horasATexto(t.horasLive);
+    document.getElementById('statLives').textContent = t.lives || 0;
+  }
+
+  function pintarPorTurno(data) {
+    var pt = data.porTurno || {};
+    var filas = ['Dia', 'Noche'].map(function (turno) {
+      var t = pt[turno] || {};
+      var pillClass = turno === 'Dia' ? 'dia' : 'noche';
+      var etiqueta = turno === 'Dia' ? 'Día' : 'Noche';
+      return '<tr><td><span class="pill ' + pillClass + '">' + etiqueta + '</span></td>' +
+        '<td>' + (t.pares || 0) + '</td>' +
+        '<td>' + soles(t.caja) + '</td>' +
+        '<td>' + horasATexto(t.horasLive) + '</td>' +
+        '<td>' + (t.lives || 0) + '</td></tr>';
+    }).join('');
+    document.getElementById('tablaPorTurno').innerHTML =
+      '<tr><th>Turno</th><th>Pares</th><th>Caja</th><th>Horas live</th><th>Lives</th></tr>' + filas;
+  }
+
+  function pintarPorAsesora(data) {
+    var lista = data.porAsesora || [];
+    var filas = lista.map(function (a) {
+      return '<tr><td>' + escapeHtml(a.asesora) + '</td>' +
+        '<td>' + a.pares + '</td>' +
+        '<td>' + soles(a.caja) + '</td>' +
+        '<td>' + a.lives + '</td></tr>';
+    }).join('') || '<tr><td colspan="4" class="empty">Sin datos</td></tr>';
+    document.getElementById('tablaPorAsesora').innerHTML =
+      '<tr><th>Asesora</th><th>Pares</th><th>Caja</th><th>Lives</th></tr>' + filas;
+  }
+
+  function pintarPorDia(data) {
+    var lista = data.porDia || [];
+    var filas = lista.map(function (d) {
+      var pillClass = d.turno === 'Dia' ? 'dia' : 'noche';
+      var etiqueta = d.turno === 'Dia' ? 'Día' : 'Noche';
+      return '<tr><td>' + d.fecha + '</td>' +
+        '<td><span class="pill ' + pillClass + '">' + etiqueta + '</span></td>' +
+        '<td>' + d.pares + '</td>' +
+        '<td>' + soles(d.caja) + '</td>' +
+        '<td>' + horasATexto(d.horasLive) + '</td>' +
+        '<td>' + d.lives + '</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="empty">Sin datos</td></tr>';
+    document.getElementById('tablaPorDia').innerHTML =
+      '<tr><th>Fecha</th><th>Turno</th><th>Pares</th><th>Caja</th><th>Horas live</th><th>Lives</th></tr>' + filas;
+  }
+
+  function pintarAsesoraLive(data) {
+    var lista = data.porAsesoraLive || [];
+    var filas = lista.map(function (a) {
+      return '<tr><td>' + escapeHtml(a.asesoraLive) + '</td>' +
+        '<td>' + a.pares + '</td>' +
+        '<td>' + horasATexto(a.horasLive) + '</td>' +
+        '<td>' + a.lives + '</td></tr>';
+    }).join('') || '<tr><td colspan="4" class="empty">Sin datos</td></tr>';
+    document.getElementById('tablaAsesoraLive').innerHTML =
+      '<tr><th>Asesora live</th><th>Pares</th><th>Horas live</th><th>Lives</th></tr>' + filas;
+  }
+
+  function pintarPromociones(data) {
+    var lista = data.porPromocion || [];
+    var filas = lista.map(function (p) {
+      return '<tr><td>' + escapeHtml(p.promocion) + '</td>' +
+        '<td>' + p.pares + '</td>' +
+        '<td>' + p.veces + '</td></tr>';
+    }).join('') || '<tr><td colspan="3" class="empty">Sin datos</td></tr>';
+    document.getElementById('tablaPromociones').innerHTML =
+      '<tr><th>Promoción</th><th>Pares</th><th>Veces usada</th></tr>' + filas;
+  }
+
+  function pintarPicosVenta(data) {
+    var lista = (data.picosVenta || []).slice(0, 8);
+    var max = lista.reduce(function (m, h) { return Math.max(m, h.pares); }, 0) || 1;
+    var html = lista.map(function (h) {
+      var pct = Math.round((h.pares / max) * 100);
+      return '<div class="bar-row">' +
+        '<span class="bar-label">' + pad(h.hora) + ':00</span>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="bar-num">' + h.pares + '</span></div>';
+    }).join('') || '<div class="empty">Sin datos</div>';
+    document.getElementById('picosVenta').innerHTML = html;
+  }
+
+  function pintarPorCanal(data) {
+    var lista = data.porCanal || [];
+    var html = lista.map(function (c) {
+      return '<div class="bar-row">' +
+        '<span class="bar-label" style="width:90px;">' + escapeHtml(c.canal) + '</span>' +
+        '<div class="bar-track"><div class="bar-fill canal" style="width:' + c.porcentaje + '%"></div></div>' +
+        '<span class="bar-num">' + c.porcentaje + '%</span></div>';
+    }).join('') || '<div class="empty">Sin datos</div>';
+    document.getElementById('paresPorCanal').innerHTML = html;
+  }
+
+  function pintarDiaSemana(data) {
+    var lista = data.porDiaSemana || [];
+    var filas = lista.map(function (d) {
+      return '<tr><td>' + escapeHtml(d.diaSemana) + '</td>' +
+        '<td>' + d.pares + '</td>' +
+        '<td>' + soles(d.caja) + '</td></tr>';
+    }).join('') || '<tr><td colspan="3" class="empty">Sin datos</td></tr>';
+    document.getElementById('tablaDiaSemana').innerHTML =
+      '<tr><th>Día</th><th>Pares</th><th>Caja</th></tr>' + filas;
+  }
+
+  function pintarCobros(data) {
+    var cobros = data.cobros || { terminoDePagar: 0, porAsesora: [] };
+    document.getElementById('statTerminoPagar').textContent = cobros.terminoDePagar || 0;
+    var filas = (cobros.porAsesora || []).map(function (a) {
+      return '<tr><td>' + escapeHtml(a.asesora) + '</td>' +
+        '<td style="color:#4ade80;">' + a.terminoDePagar + '</td></tr>';
+    }).join('') || '<tr><td colspan="2" class="empty">Sin datos</td></tr>';
+    document.getElementById('tablaCobros').innerHTML =
+      '<tr><th>Asesora venta</th><th>Terminó de pagar</th></tr>' + filas;
+  }
+
+  // Al cargar la página, deja el filtro de "Hoy" preseleccionado en los inputs
+  (function initFechas() {
+    var hoy = new Date();
+    document.getElementById('fechaDesde').value = toISODate(hoy);
+    document.getElementById('fechaHasta').value = toISODate(hoy);
+  })();
+</script>
+</body>
+</html>
